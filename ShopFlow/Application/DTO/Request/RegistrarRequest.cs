@@ -1,6 +1,4 @@
-﻿using ShopFlow.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
-using System.Reflection.Metadata;
 
 namespace ShopFlow.Application.DTO.Request
 {

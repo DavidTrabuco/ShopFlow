@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using ShopFlow.Domain.Entidades;
 
-namespace ShopFlow.Infrastruture.Data
+namespace ShopFlow.Infrastructure.Data
 {
     public class ShopFlowDbContext : DbContext
     {
@@ -20,6 +20,7 @@ namespace ShopFlow.Infrastruture.Data
         public DbSet<Estoque> Estoques => Set<Estoque>();
         public DbSet<Carrinho> Carrinhos => Set<Carrinho>();
         public DbSet<ItemCarrinho> ItensCarrinho => Set<ItemCarrinho>();
+        public DbSet<Sessao> Sessoes => Set<Sessao>();
 
         protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
         {
@@ -181,6 +182,23 @@ namespace ShopFlow.Infrastruture.Data
                       .HasForeignKey(e => e.VarianteId)
                       .OnDelete(DeleteBehavior.Restrict);
             });
+
+            modelBuilder.Entity<Sessao>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.TokenHash).IsRequired();
+                entity.HasIndex(e => e.TokenHash).IsUnique();
+                entity.Property(e => e.CriadoEm).IsRequired();
+                entity.Property(e => e.ExpiraEm).IsRequired();
+                entity.HasOne(e => e.Usuario)
+                      .WithMany()
+                      .HasForeignKey(e => e.UsuarioId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+
+
+
         }
     }
 }

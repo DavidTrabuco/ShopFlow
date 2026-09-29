@@ -1,5 +1,6 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -7,7 +8,7 @@ using ShopFlow.Domain.Entidades;
 using ShopFlow.Domain.Interfaces;
 using ShopFlow.Domain.Options;
 
-namespace ShopFlow.Infrastruture.Security
+namespace ShopFlow.Infrastructure.Security
 {
     public class JwtTokenService : ITokenService
     {
@@ -43,5 +44,19 @@ namespace ShopFlow.Infrastruture.Security
             return tokenHandler.WriteToken(token);
         }
 
+        public string GerarTokenSessao() { 
+        
+          var bytes = RandomNumberGenerator.GetBytes(32);
+
+            return Convert.ToBase64String(bytes);
+        }
+
+
+        public string HashTokenSessao(string tokenSessao)
+        {
+            var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(tokenSessao));
+
+            return Convert.ToBase64String(bytes);
+        }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using ShopFlow.Domain.Interfaces;
 
-namespace ShopFlow.Infrastruture.Security
+namespace ShopFlow.Infrastructure.Security
 {
     public class BcryptPasswordHasher : IPasswordHasher
     {

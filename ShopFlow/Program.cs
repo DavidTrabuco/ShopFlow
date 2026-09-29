@@ -4,9 +4,9 @@ using Microsoft.IdentityModel.Tokens;
 using ShopFlow.Application.Service;
 using ShopFlow.Domain.Interfaces;
 using ShopFlow.Domain.Options;
-using ShopFlow.Infrastruture.Data;
-using ShopFlow.Infrastruture.Repositories;
-using ShopFlow.Infrastruture.Security;
+using ShopFlow.Infrastructure.Data;
+using ShopFlow.Infrastructure.Repositories;
+using ShopFlow.Infrastructure.Security;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -30,7 +30,7 @@ Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
 
 
 
-builder.Services.AddScoped<IUsuarioRepository, UsuariosRepository>();
+builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<ITokenService, JwtTokenService>();
 builder.Services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -50,9 +50,24 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = jwt.Issuer,
             ValidAudience = jwt.Audience,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Key)),
-           
+
+        };
+
+
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                context.Token = context.Request.Cookies["access_token"];
+                return Task.CompletedTask;
+            }
         };
     });
+
+
+
+
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
@@ -67,7 +82,6 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();

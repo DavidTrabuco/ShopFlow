@@ -1,10 +1,9 @@
-using ShopFlow.Application.DTO.Request;
-using ShopFlow.Application.DTO.Response;
+using Microsoft.EntityFrameworkCore;
 using ShopFlow.Domain.Entidades;
 using ShopFlow.Domain.Enums;
 using ShopFlow.Domain.Exceptions;
 using ShopFlow.Domain.Interfaces;
-using ShopFlow.Infrastruture.Data;
+using ShopFlow.Infrastructure.Data;
 
 namespace ShopFlow.Application.Service
 {
@@ -14,24 +13,21 @@ namespace ShopFlow.Application.Service
 
         private readonly IUsuarioRepository _usuarioRepository;
         private readonly IPasswordHasher _passwordHasher;
-        private readonly ITokenService _tokenService;
         private readonly ShopFlowDbContext _db;
 
         public AuthService(
             IUsuarioRepository usuarioRepository,
             IPasswordHasher passwordHasher,
-            ITokenService tokenService,
             ShopFlowDbContext db)
         {
             _usuarioRepository = usuarioRepository;
             _passwordHasher = passwordHasher;
-            _tokenService = tokenService;
             _db = db;
         }
 
-        public async Task<AuthResponse> RegistrarAsync(RegistrarRequest request, CancellationToken ct = default)
+        public async Task<Usuario> RegistrarAsync(string nome, string email, string senha)
         {
-            var email = NormalizarEmail(request.Email);
+            email = NormalizarEmail(email);
 
             if (await _usuarioRepository.EmailExisteAsync(email))
                 throw new ConflitoException("Email já está em uso.");
@@ -39,43 +35,70 @@ namespace ShopFlow.Application.Service
             var usuario = new Usuario
             {
                 Id = Guid.NewGuid(),
-                Nome = request.Nome.Trim(),
+                Nome = nome.Trim(),
                 Email = email,
-                SenhaHash = _passwordHasher.Gerar(request.Senha),
+                SenhaHash = _passwordHasher.Gerar(senha),
                 Papel = PapelUsuario.Cliente,
                 EmailConfirmado = false,
                 CriadoEm = DateTime.UtcNow
             };
 
             _db.Usuarios.Add(usuario);
+            await _db.SaveChangesAsync();
 
-          
-            return MontarResposta(usuario);
+            return usuario;
         }
 
-        public async Task<AuthResponse> LoginAsync(LoginRequest request, CancellationToken ct = default)
+        public async Task<Usuario> LoginAsync(string email, string senha)
         {
-            var email = NormalizarEmail(request.Email);
+            email = NormalizarEmail(email);
 
             var usuario = await _usuarioRepository.ObterPorEmailAsync(email);
 
-            if (usuario is null || !_passwordHasher.Verificar(request.Senha, usuario.SenhaHash))
+            if (usuario is null || !_passwordHasher.Verificar(senha, usuario.SenhaHash))
                 throw new NaoAutorizadoException("E-mail ou senha inválidos.");
 
-            return MontarResposta(usuario);
-        }
-
-        private AuthResponse MontarResposta(Usuario usuario)
-        {
-            return new AuthResponse
-            {
-                Nome = usuario.Nome,
-                Email = usuario.Email,
-                PapelUsuario = usuario.Papel,
-                Token = _tokenService.GerarToken(usuario)
-            };
+            return usuario;
         }
 
         private static string NormalizarEmail(string email) => email.Trim().ToLowerInvariant();
+
+
+
+
+        // Sessão 
+        public async Task CriarSessaoAsync(Guid usuarioId, string tokenHash)
+        {
+            _db.Sessoes.Add(new Sessao
+            {
+                Id = Guid.NewGuid(),
+                UsuarioId = usuarioId,
+                TokenHash = tokenHash,
+                CriadoEm = DateTime.UtcNow,
+                ExpiraEm = DateTime.UtcNow.AddDays(7)
+            });
+            await _db.SaveChangesAsync();
+        }
+
+        public async Task<Usuario?> ValidarSessaoAsync(string tokenHash)
+        {
+            var sessao = await _db.Sessoes
+                .Include(s => s.Usuario)
+                .FirstOrDefaultAsync(s => s.TokenHash == tokenHash);
+
+            if (sessao is null || !sessao.Ativa)
+                return null;
+
+            return sessao.Usuario;
+        }
+
+        public async Task EncerrarSessaoAsync(string tokenHash)
+        {
+            var sessao = await _db.Sessoes.FirstOrDefaultAsync(s => s.TokenHash == tokenHash);
+            if (sessao is null) return;
+
+            sessao.EncerradaEm = DateTime.UtcNow;
+            await _db.SaveChangesAsync();
+        }
     }
 }
