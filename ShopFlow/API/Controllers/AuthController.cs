@@ -5,11 +5,10 @@ using Microsoft.Extensions.Options;
 using ShopFlow.Application.DTO.Request;
 using ShopFlow.Application.DTO.Response;
 using ShopFlow.Domain.Entidades;
-using ShopFlow.Domain.Exceptions;
 using ShopFlow.Domain.Interfaces;
 using ShopFlow.Domain.Options;
 
-namespace ShopFlow.Controllers
+namespace ShopFlow.API.Controllers
 {
     [ApiController]
     [Route("api/v1/auth")]
@@ -33,44 +32,32 @@ namespace ShopFlow.Controllers
         [HttpPost("registrar")]
         public async Task<IActionResult> Registrar(RegistrarRequest request)
         {
-            try
-            {
-                var usuario = await _authService.RegistrarAsync(request.Nome, request.Email, request.Senha);
-                await AbrirSessaoAsync(usuario);
-                return Ok(AuthResponse.De(usuario));
-            }
-            catch (ConflitoException ex)
-            {
-                return Problem(title: ex.Message, statusCode: StatusCodes.Status409Conflict);
-            }
+            // E-mail em uso → ConflitoException → 409 (tratado no GlobalExceptionHandler)
+            var usuario = await _authService.RegistrarAsync(request.Nome, request.Email, request.Senha);
+            await AbrirSessaoAsync(usuario);
+            return Ok(AuthResponse.De(usuario));
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequest request)
         {
-            try
-            {
-                var usuario = await _authService.LoginAsync(request.Email, request.Senha);
-                await AbrirSessaoAsync(usuario);
-                return Ok(AuthResponse.De(usuario));
-            }
-            catch (NaoAutorizadoException ex)
-            {
-                return Problem(title: ex.Message, statusCode: StatusCodes.Status401Unauthorized);
-            }
+            // Credenciais inválidas → NaoAutorizadoException → 401 (tratado no GlobalExceptionHandler)
+            var usuario = await _authService.LoginAsync(request.Email, request.Senha);
+            await AbrirSessaoAsync(usuario);
+            return Ok(AuthResponse.De(usuario));
         }
 
         [HttpPost("renovar")]
         public async Task<IActionResult> Renovar()
         {
             if (!Request.Cookies.TryGetValue(CookieSessao, out var tokenSessao))
-                return Problem(title: "Sessão expirada.", statusCode: StatusCodes.Status401Unauthorized);
+                return Problem(title: "Não autorizado", detail: "Sessão expirada.", statusCode: StatusCodes.Status401Unauthorized);
 
             var hash = _tokenService.HashTokenSessao(tokenSessao);
             var usuario = await _authService.ValidarSessaoAsync(hash);
 
             if (usuario is null)
-                return Problem(title: "Sessão expirada.", statusCode: StatusCodes.Status401Unauthorized);
+                return Problem(title: "Não autorizado", detail: "Sessão expirada.", statusCode: StatusCodes.Status401Unauthorized);
 
             await _authService.EncerrarSessaoAsync(hash);
             await AbrirSessaoAsync(usuario);

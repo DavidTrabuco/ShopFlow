@@ -98,6 +98,7 @@ StyleCopReport.xml
 *.svclog
 *.scc
 
+
 # Chutzpah Test files
 _Chutzpah*
 
@@ -363,3 +364,4 @@ MigrationBackup/
 FodyWeavers.xsd
 # ShopFlow
 _to_delete/
+data/

@@ -1,6 +1,7 @@
 namespace ShopFlow.Domain.Exceptions
 {
-    public class NaoAutorizadoException : Exception
+    // 401 - credenciais inválidas
+    public class NaoAutorizadoException : DomainException
     {
         public NaoAutorizadoException(string mensagem) : base(mensagem)
         {
