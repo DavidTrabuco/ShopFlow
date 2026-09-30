@@ -365,3 +365,4 @@ FodyWeavers.xsd
 # ShopFlow
 _to_delete/
 data/
+.env
