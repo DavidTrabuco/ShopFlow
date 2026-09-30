@@ -1,5 +1,21 @@
-services: 
-   postgres:
+services:
+
+  shopflow:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: shopflow
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__ShopFlow=Host=postgres;Port=5432;Database=shopflow;Username=shopflow;Password=shopflow
+      - Jwt__Key=${JWT_KEY}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
     image: postgres:15.3
     container_name: postgres
     environment:
@@ -10,5 +26,8 @@ services:
       - "5432:5432"
     volumes:
       - ./data:/var/lib/postgresql/data
-
-
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shopflow -d shopflow"]
+      interval: 5s
+      timeout: 3s
+      retries: 10

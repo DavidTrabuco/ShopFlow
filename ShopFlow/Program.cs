@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using ShopFlow.API.Extensao;
@@ -81,18 +82,33 @@ builder.Services.AddAuthorization(option =>
 
 });
 
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 var app = builder.Build();
+
+// PRIMEIRO do pipeline: lê o "bilhete" do proxy do Render (https + IP real)
+app.UseForwardedHeaders();
+
+// Cria/atualiza as tabelas ao subir (banco do Render nasce vazio)
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ShopFlowDbContext>();
+    db.Database.Migrate();
+}
 
 // Primeiro do pipeline: envolve tudo o que vem depois
 app.UseExceptionHandler();
 // 401/403/404 sem corpo (ex.: token inválido no JwtBearer) também viram ProblemDetails
 app.UseStatusCodePages();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// Swagger também em produção (projeto de estudo/portfólio)
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
