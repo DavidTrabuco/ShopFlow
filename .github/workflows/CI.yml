@@ -26,3 +26,6 @@ jobs:
 
       - name: Build da imagem Docker
         run: docker build -t shopflow:latest .
+
+      - name: Rodar testes
+        run: dotnet test ShopFlow.Tests/ShopFlow.Tests.csproj --configuration Release

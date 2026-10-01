@@ -6,6 +6,7 @@ using ShopFlow.Domain.Entidades;
 using ShopFlow.Domain.Exceptions;
 using ShopFlow.Domain.Interfaces;
 using ShopFlow.Infrastructure.Data;
+using ShopFlow.Application.Common;
 
 namespace ShopFlow.Application.Service
 {
@@ -33,7 +34,7 @@ namespace ShopFlow.Application.Service
 
         public async Task<Categoria> CriarAsync(string nome, Guid? categoriaPaiId)
         {
-            var slug = GerarSlug(nome);
+            var slug = Slug.GerarSlug(nome);
 
             if (await _categoriaRepository.ObterCategoriaPorSlugAsync(slug) is not null)
                 throw new ConflitoException("Já existe uma categoria com esse nome.");
@@ -61,10 +62,11 @@ namespace ShopFlow.Application.Service
             var categoria = await _db.Categorias.FirstOrDefaultAsync(c => c.Id == id)
                 ?? throw new NaoEncontradoException("Categoria não encontrada.");
 
-            var slug = GerarSlug(nome);
+            var slug = Slug.GerarSlug(nome);
             var mesmoSlug = await _categoriaRepository.ObterCategoriaPorSlugAsync(slug);
             if (mesmoSlug is not null && mesmoSlug.Id != id)
                 throw new ConflitoException("Já existe uma categoria com esse nome.");
+
 
             if (categoriaPaiId is not null)
             {
@@ -114,13 +116,8 @@ namespace ShopFlow.Application.Service
                 throw new RegraDeNegocioException("A categoria pai está desativada.");
         }
 
-        private static string GerarSlug(string texto)
-        {
-            var normalizado = texto.Trim().ToLowerInvariant().Normalize(NormalizationForm.FormD);
-            var semAcento = new string(normalizado
-                .Where(c => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
-                .ToArray());
-            return Regex.Replace(semAcento, "[^a-z0-9]+", "-").Trim('-');
-        }
+      
+     
+        
     }
 }
