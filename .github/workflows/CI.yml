@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Instalar o .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restaurar pacotes
+        run: dotnet restore ShopFlow/ShopFlow.csproj
+
+      - name: Compilar o projeto
+        run: dotnet build ShopFlow/ShopFlow.csproj --no-restore --configuration Release
+
+      - name: Build da imagem Docker
+        run: docker build -t shopflow:latest .
