@@ -9,7 +9,7 @@ namespace ShopFlow.Application.Service
 {
     public class AuthService : IAuthService
     {
-        
+
 
         private readonly IUsuarioRepository _usuarioRepository;
         private readonly IPasswordHasher _passwordHasher;
@@ -98,6 +98,17 @@ namespace ShopFlow.Application.Service
             if (sessao is null) return;
 
             sessao.EncerradaEm = DateTime.UtcNow;
+            await _db.SaveChangesAsync();
+        }
+
+
+
+        public async Task DeletarContaAsync(Guid usuarioId)
+        {
+            var usuario = await _usuarioRepository.ObterPorIdAsync(usuarioId);
+            if (usuario is null)
+                throw new NaoEncontradoException("Usuário não encontrado.");
+            _db.Usuarios.Remove(usuario);
             await _db.SaveChangesAsync();
         }
     }

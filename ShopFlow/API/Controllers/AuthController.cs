@@ -88,6 +88,23 @@ namespace ShopFlow.API.Controllers
             });
         }
 
+
+        [Authorize]
+        [HttpDelete("deletar")]
+        public async Task<IActionResult> DeletarContaAsync()
+        {
+            var usuarioId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+
+
+            await _authService.DeletarContaAsync(usuarioId);
+
+
+            Response.Cookies.Delete(CookieAcesso, OpcoesCookie(null));
+            Response.Cookies.Delete(CookieSessao, OpcoesCookie(null));
+            return NoContent();
+        }
+
         private async Task AbrirSessaoAsync(Usuario usuario)
         {
             var acesso = _tokenService.GerarToken(usuario);

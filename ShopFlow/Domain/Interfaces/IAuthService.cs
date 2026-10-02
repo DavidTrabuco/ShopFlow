@@ -10,5 +10,8 @@ namespace ShopFlow.Domain.Interfaces
         Task CriarSessaoAsync(Guid usuarioId, string tokenHash);
         Task<Usuario?> ValidarSessaoAsync(string tokenHash);
         Task EncerrarSessaoAsync(string tokenHash);
+
+        Task DeletarContaAsync(Guid usuarioId);
+
     }
 }
