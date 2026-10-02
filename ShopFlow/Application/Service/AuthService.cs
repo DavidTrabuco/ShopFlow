@@ -105,10 +105,21 @@ namespace ShopFlow.Application.Service
 
         public async Task DeletarContaAsync(Guid usuarioId)
         {
-            var usuario = await _usuarioRepository.ObterPorIdAsync(usuarioId);
-            if (usuario is null)
-                throw new NaoEncontradoException("Usuário não encontrado.");
+            // Escrita → carrega pelo EF (entidade rastreada), não pelo Dapper
+            var usuario = await _db.Usuarios.FindAsync(usuarioId)
+                ?? throw new NaoEncontradoException("Usuário não encontrado.");
+
             _db.Usuarios.Remove(usuario);
+            await _db.SaveChangesAsync();
+        }
+
+
+        public async Task AlterarPapelUsuarioAsync(Guid usuarioId, PapelUsuario novoPapel)
+        {
+            var usuario = await _db.Usuarios.FindAsync(usuarioId)
+                ?? throw new NaoEncontradoException("Usuário não encontrado.");
+
+            usuario.Papel = novoPapel;
             await _db.SaveChangesAsync();
         }
     }

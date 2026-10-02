@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using ShopFlow.API.Extensao;
 using ShopFlow.Application.DTO.Request;
 using ShopFlow.Application.DTO.Response;
 using ShopFlow.Domain.Entidades;
@@ -104,6 +105,17 @@ namespace ShopFlow.API.Controllers
             Response.Cookies.Delete(CookieSessao, OpcoesCookie(null));
             return NoContent();
         }
+
+
+
+        //[Authorize(Policy = Policies.Admin)]
+        [HttpPatch("usuarios/{id:guid}/papel")]
+        public async Task<IActionResult> AlterarPapel(Guid id, PapelRequest request)
+        {
+            await _authService.AlterarPapelUsuarioAsync(id, request.PapelUsuario);
+            return NoContent();
+        }
+
 
         private async Task AbrirSessaoAsync(Usuario usuario)
         {

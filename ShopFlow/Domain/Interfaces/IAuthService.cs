@@ -1,4 +1,5 @@
 using ShopFlow.Domain.Entidades;
+using ShopFlow.Domain.Enums;
 
 namespace ShopFlow.Domain.Interfaces
 {
@@ -12,6 +13,8 @@ namespace ShopFlow.Domain.Interfaces
         Task EncerrarSessaoAsync(string tokenHash);
 
         Task DeletarContaAsync(Guid usuarioId);
+
+        Task AlterarPapelUsuarioAsync(Guid usuarioId, PapelUsuario novoPapel);
 
     }
 }
