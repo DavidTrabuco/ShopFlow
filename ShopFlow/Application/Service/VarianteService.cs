@@ -156,7 +156,7 @@ namespace ShopFlow.Application.Service
         private static List<AtributoVariante> MontarAtributos(IEnumerable<AtributoVariante> atributos)
         {
             var lista = atributos
-                .Select(a => new AtributoVariante { Id = Guid.NewGuid(), Nome = a.Nome.Trim(), Valor = a.Valor.Trim() })
+                .Select(a => new AtributoVariante { Nome = a.Nome.Trim(), Valor = a.Valor.Trim() })
                 .ToList();
 
             if (lista.Any(a => a.Nome.Length == 0 || a.Valor.Length == 0))

@@ -22,12 +22,21 @@ namespace ShopFlow.API.Controllers
         private readonly IAuthService _authService;
         private readonly ITokenService _tokenService;
         private readonly JwtOptions _jwt;
+        private readonly GoogleOptions _google;
 
-        public AuthController(IAuthService authService, ITokenService tokenService, IOptions<JwtOptions> jwt)
+        public AuthController(IAuthService authService, ITokenService tokenService, IOptions<JwtOptions> jwt, IOptions<GoogleOptions> google)
         {
             _authService = authService;
             _tokenService = tokenService;
             _jwt = jwt.Value;
+            _google = google.Value;
+        }
+
+        // O Client ID não é segredo: o front precisa dele para mostrar o botão do Google
+        [HttpGet("google/config")]
+        public IActionResult ConfigGoogle()
+        {
+            return Ok(new { clientId = _google.ClientId });
         }
 
         [HttpPost("registrar")]

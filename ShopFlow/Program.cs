@@ -128,6 +128,10 @@ app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
+// Serve wwwroot/google-teste.html (página de teste do login com Google, sem segredos).
+// Quando não precisar mais, apague esta linha e a pasta wwwroot.
+app.UseStaticFiles();
+
 app.UseAuthentication();
 
 app.UseAuthorization();
