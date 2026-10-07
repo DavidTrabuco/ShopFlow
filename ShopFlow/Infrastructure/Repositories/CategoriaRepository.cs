@@ -2,7 +2,7 @@ using System.Data;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
 using ShopFlow.Domain.Entidades;
-using ShopFlow.Domain.Interfaces;
+using ShopFlow.Domain.Interfaces.Categorias;
 using ShopFlow.Infrastructure.Data;
 
 namespace ShopFlow.Infrastructure.Repositories

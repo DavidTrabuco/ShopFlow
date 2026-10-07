@@ -2,7 +2,7 @@
 using ShopFlow.Application.Common;
 using ShopFlow.Domain.Entidades;
 using ShopFlow.Domain.Exceptions;
-using ShopFlow.Domain.Interfaces;
+using ShopFlow.Domain.Interfaces.Produtos;
 using ShopFlow.Infrastructure.Data;
 
 namespace ShopFlow.Application.Service

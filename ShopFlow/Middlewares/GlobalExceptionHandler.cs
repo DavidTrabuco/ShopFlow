@@ -23,6 +23,7 @@ namespace ShopFlow.Middlewares
         {
             var (status, titulo, detalhe) = ex switch
             {
+                ValidacaoException      => (StatusCodes.Status400BadRequest, "Requisição inválida", ex.Message),
                 NaoAutorizadoException  => (StatusCodes.Status401Unauthorized, "Não autorizado", ex.Message),
                 NaoEncontradoException  => (StatusCodes.Status404NotFound, "Recurso não encontrado", ex.Message),
                 ConflitoException       => (StatusCodes.Status409Conflict, "Conflito", ex.Message),
@@ -32,6 +33,10 @@ namespace ShopFlow.Middlewares
                 // EmailExisteAsync, mas o índice único do Postgres barra o segundo (código 23505).
                 DbUpdateException { InnerException: PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } }
                     => (StatusCodes.Status409Conflict, "Conflito", "Registro duplicado."),
+
+                // Dois admins ajustando o mesmo estoque ao mesmo tempo: o segundo perde (Versao mudou)
+                DbUpdateConcurrencyException
+                    => (StatusCodes.Status409Conflict, "Conflito", "O registro foi alterado por outra operação. Recarregue e tente novamente."),
 
                 // Qualquer outra coisa é bug: mensagem genérica, NUNCA ex.Message (pode vazar detalhes internos)
                 _ => (StatusCodes.Status500InternalServerError, "Erro inesperado", "Ocorreu um erro inesperado. Tente novamente mais tarde.")

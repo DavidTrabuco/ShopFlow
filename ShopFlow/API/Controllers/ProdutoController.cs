@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using ShopFlow.API.Extensao;
 using ShopFlow.Application.DTO.Request;
 using ShopFlow.Application.DTO.Response;
-using ShopFlow.Domain.Interfaces;
+using ShopFlow.Domain.Interfaces.Produtos;
 
 namespace ShopFlow.API.Controllers
 {

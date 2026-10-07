@@ -7,7 +7,10 @@ namespace ShopFlow.Domain.Entidades
         public Guid Id { get; set; }
         public string Nome { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
-        public string SenhaHash { get; set; } = string.Empty;
+        // Null quando a conta foi criada só pelo Google (sem senha)
+        public string? SenhaHash { get; set; }
+        // "sub" do Google: identificador estável (o e-mail pode mudar)
+        public string? GoogleId { get; set; }
         public string? Cpf { get; set; }
         public string? Telefone { get; set; }
         public PapelUsuario Papel { get; set; } = PapelUsuario.Cliente;

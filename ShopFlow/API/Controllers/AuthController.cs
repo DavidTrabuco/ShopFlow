@@ -48,6 +48,15 @@ namespace ShopFlow.API.Controllers
             return Ok(AuthResponse.De(usuario));
         }
 
+        [HttpPost("google")]
+        public async Task<IActionResult> LoginComGoogle(GoogleLoginRequest request)
+        {
+            // Token inválido → NaoAutorizadoException → 401 (tratado no GlobalExceptionHandler)
+            var usuario = await _authService.LoginComGoogleAsync(request.IdToken);
+            await AbrirSessaoAsync(usuario);
+            return Ok(AuthResponse.De(usuario));
+        }
+
         [HttpPost("renovar")]
         public async Task<IActionResult> Renovar()
         {

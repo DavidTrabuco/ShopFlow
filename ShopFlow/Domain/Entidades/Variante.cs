@@ -4,7 +4,7 @@ namespace ShopFlow.Domain.Entidades
     {
         public Guid Id { get; set; }
         public string Sku { get; set; } = string.Empty;
-        public Dictionary<string, string> Atributos { get; set; } = new();
+        public List<AtributoVariante> Atributos { get; set; } = new();
         public decimal Preco { get; set; }
         public decimal? PrecoPromocional { get; set; }
         public decimal PrecoEfetivo => PrecoPromocional ?? Preco;

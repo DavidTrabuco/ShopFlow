@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ShopFlow.Infrastructure.Data;
@@ -11,9 +12,11 @@ using ShopFlow.Infrastructure.Data;
 namespace ShopFlow.Migrations
 {
     [DbContext(typeof(ShopFlowDbContext))]
-    partial class ShopFlowDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261007131425_AtributosVarianteTabela")]
+    partial class AtributosVarianteTabela
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -432,11 +435,6 @@ namespace ShopFlow.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("email_confirmado");
 
-                    b.Property<string>("GoogleId")
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)")
-                        .HasColumnName("google_id");
-
                     b.Property<string>("Nome")
                         .IsRequired()
                         .HasMaxLength(120)
@@ -450,6 +448,7 @@ namespace ShopFlow.Migrations
                         .HasColumnName("papel");
 
                     b.Property<string>("SenhaHash")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("senha_hash");
 
@@ -468,10 +467,6 @@ namespace ShopFlow.Migrations
                     b.HasIndex("Email")
                         .IsUnique()
                         .HasDatabaseName("ix_usuarios_email");
-
-                    b.HasIndex("GoogleId")
-                        .IsUnique()
-                        .HasDatabaseName("ix_usuarios_google_id");
 
                     b.ToTable("usuarios", (string)null);
                 });

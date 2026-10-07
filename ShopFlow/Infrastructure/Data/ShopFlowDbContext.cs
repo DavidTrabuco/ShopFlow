@@ -1,6 +1,4 @@
-using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using ShopFlow.Domain.Entidades;
 
 namespace ShopFlow.Infrastructure.Data
@@ -16,6 +14,7 @@ namespace ShopFlow.Infrastructure.Data
         public DbSet<Categoria> Categorias => Set<Categoria>();
         public DbSet<Produto> Produtos => Set<Produto>();
         public DbSet<Variante> Variantes => Set<Variante>();
+        public DbSet<AtributoVariante> AtributosVariante => Set<AtributoVariante>();
         public DbSet<ImagemProduto> ImagensProduto => Set<ImagemProduto>();
         public DbSet<Estoque> Estoques => Set<Estoque>();
         public DbSet<Carrinho> Carrinhos => Set<Carrinho>();
@@ -38,7 +37,9 @@ namespace ShopFlow.Infrastructure.Data
                 entity.Property(e => e.Nome).IsRequired().HasMaxLength(120);
                 entity.Property(e => e.Email).IsRequired().HasMaxLength(180);
                 entity.HasIndex(e => e.Email).IsUnique();
-                entity.Property(e => e.SenhaHash).IsRequired();
+                entity.Property(e => e.SenhaHash);
+                entity.Property(e => e.GoogleId).HasMaxLength(64);
+                entity.HasIndex(e => e.GoogleId).IsUnique();
                 entity.Property(e => e.Cpf).HasMaxLength(11);
                 entity.HasIndex(e => e.Cpf).IsUnique();
                 entity.Property(e => e.Telefone).HasMaxLength(20);
@@ -97,15 +98,6 @@ namespace ShopFlow.Infrastructure.Data
                 entity.HasIndex(e => e.Sku).IsUnique();
                 entity.Ignore(e => e.PrecoEfetivo);
 
-                entity.Property(e => e.Atributos)
-                      .HasColumnType("jsonb")
-                      .HasConversion(
-                          v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                          v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions?)null) ?? new Dictionary<string, string>(),
-                          new ValueComparer<Dictionary<string, string>>(
-                              (a, b) => JsonSerializer.Serialize(a, (JsonSerializerOptions?)null) == JsonSerializer.Serialize(b, (JsonSerializerOptions?)null),
-                              v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null).GetHashCode(),
-                              v => new Dictionary<string, string>(v)));
 
                 entity.ToTable(t =>
                 {
@@ -117,6 +109,21 @@ namespace ShopFlow.Infrastructure.Data
                       .WithMany(p => p.Variantes)
                       .HasForeignKey(e => e.ProdutoId)
                       .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<AtributoVariante>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Nome).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Valor).IsRequired().HasMaxLength(100);
+
+                // Uma variante não repete o mesmo atributo (ex.: duas "Cor")
+                entity.HasIndex(e => new { e.VarianteId, e.Nome }).IsUnique();
+
+                entity.HasOne(e => e.Variante)
+                      .WithMany(v => v.Atributos)
+                      .HasForeignKey(e => e.VarianteId)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<ImagemProduto>(entity =>

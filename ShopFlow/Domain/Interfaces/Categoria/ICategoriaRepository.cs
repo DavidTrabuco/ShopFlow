@@ -1,6 +1,6 @@
 ﻿using ShopFlow.Domain.Entidades;
 
-namespace ShopFlow.Domain.Interfaces
+namespace ShopFlow.Domain.Interfaces.Categorias
 {
     public interface ICategoriaRepository
     {

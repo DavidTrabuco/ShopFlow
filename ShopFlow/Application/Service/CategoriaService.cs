@@ -4,9 +4,9 @@ using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using ShopFlow.Domain.Entidades;
 using ShopFlow.Domain.Exceptions;
-using ShopFlow.Domain.Interfaces;
 using ShopFlow.Infrastructure.Data;
 using ShopFlow.Application.Common;
+using ShopFlow.Domain.Interfaces.Categorias;
 
 namespace ShopFlow.Application.Service
 {

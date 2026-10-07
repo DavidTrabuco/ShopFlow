@@ -1,9 +1,9 @@
 ﻿using Dapper;
-using ShopFlow.Domain.Interfaces;
 using ShopFlow.Infrastructure.Data;
 using System.Data;
 using ShopFlow.Domain.Entidades;
 using Microsoft.EntityFrameworkCore;
+using ShopFlow.Domain.Interfaces.Produtos;
 
 namespace ShopFlow.Infrastructure.Repositories
 {

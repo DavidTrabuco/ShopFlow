@@ -6,6 +6,9 @@ using ShopFlow.API.Extensao;
 using ShopFlow.Application.Service;
 using ShopFlow.Domain.Enums;
 using ShopFlow.Domain.Interfaces;
+using ShopFlow.Domain.Interfaces.Categorias;
+using ShopFlow.Domain.Interfaces.Produtos;
+using ShopFlow.Domain.Interfaces.Variantes;
 using ShopFlow.Domain.Options;
 using ShopFlow.Infrastructure.Data;
 using ShopFlow.Infrastructure.Repositories;
@@ -20,6 +23,12 @@ builder.Services.AddOptions<JwtOptions>()
     .Bind(builder.Configuration.GetSection(JwtOptions.Secao))
     .ValidateDataAnnotations()
     .ValidateOnStart();
+
+// Sem ValidateOnStart de propósito: a API sobe mesmo sem Google configurado;
+// o erro aparece só quando alguém tenta logar com o Google.
+builder.Services.AddOptions<GoogleOptions>()
+    .Bind(builder.Configuration.GetSection(GoogleOptions.Secao))
+    .ValidateDataAnnotations();
 
 builder.Services.AddDbContext<ShopFlowDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("ShopFlow"))
@@ -41,11 +50,14 @@ Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<ITokenService, JwtTokenService>();
 builder.Services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
+builder.Services.AddScoped<IGoogleTokenValidator, GoogleTokenValidator>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICategoriaRepository, CategoriaRepository>();
 builder.Services.AddScoped<ICategoriaService, CategoriaService>();
 builder.Services.AddScoped<IProdutoRepository, ProdutoRepository>();
 builder.Services.AddScoped<IProdutoService, ProdutoService>();
+builder.Services.AddScoped<IVarianteRepository, VarianteRepository>();
+builder.Services.AddScoped<IVarianteService, VarianteService>();
 
 
 
