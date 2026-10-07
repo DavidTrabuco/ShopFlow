@@ -130,6 +130,10 @@ ShopFlow/
 └── Migrations/      estrutura do banco (EF Core)
 ```
 
+
+<img width="1289" height="1826" alt="image" src="https://github.com/user-attachments/assets/bc926471-a007-448d-ad8b-09dd4e9e2940" />
+
+
 ## Problemas comuns
 | Erro | Causa | Solução |
 |---|---|---|
