@@ -7,7 +7,7 @@ namespace ShopFlow.Domain.Interfaces
     {
         Task<Usuario> RegistrarAsync(string nome, string email, string senha);
         Task<Usuario> LoginAsync(string email, string senha);
-        Task<Usuario> LoginComGoogleAsync(string idToken);
+        Task<Usuario> ObterOuCriarViaGoogleAsync(string googleId, string email, string nome, bool emailVerificado);
 
         Task CriarSessaoAsync(Guid usuarioId, string tokenHash);
         Task<Usuario?> ValidarSessaoAsync(string tokenHash);

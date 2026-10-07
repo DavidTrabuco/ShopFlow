@@ -13,18 +13,15 @@ namespace ShopFlow.Application.Service
 
         private readonly IUsuarioRepository _usuarioRepository;
         private readonly IPasswordHasher _passwordHasher;
-        private readonly IGoogleTokenValidator _googleValidator;
         private readonly ShopFlowDbContext _db;
 
         public AuthService(
             IUsuarioRepository usuarioRepository,
             IPasswordHasher passwordHasher,
-            IGoogleTokenValidator googleValidator,
             ShopFlowDbContext db)
         {
             _usuarioRepository = usuarioRepository;
             _passwordHasher = passwordHasher;
-            _googleValidator = googleValidator;
             _db = db;
         }
 
@@ -65,39 +62,38 @@ namespace ShopFlow.Application.Service
             return usuario;
         }
 
-        public async Task<Usuario> LoginComGoogleAsync(string idToken)
+        // Chamado pelo callback do Google: os dados já foram validados pelo middleware (troca do code)
+        public async Task<Usuario> ObterOuCriarViaGoogleAsync(string googleId, string email, string nome, bool emailVerificado)
         {
-            // 1. VALIDAR o token com o Google (assinatura, validade e audience)
-            var google = await _googleValidator.ValidarAsync(idToken);
-
             // Sem e-mail verificado pelo Google, não dá para confiar nele (risco de tomar conta alheia)
-            if (!google.EmailVerificado)
+            if (!emailVerificado)
                 throw new NaoAutorizadoException("O e-mail da conta Google não está verificado.");
 
-            var email = NormalizarEmail(google.Email);
+            email = NormalizarEmail(email);
 
-            // 2. Já entrou antes pelo Google → é ele
-            var usuario = await _db.Usuarios.FirstOrDefaultAsync(u => u.GoogleId == google.GoogleId);
+            // 1. Já entrou antes pelo Google → é ele
+            var usuario = await _db.Usuarios.FirstOrDefaultAsync(u => u.GoogleId == googleId);
             if (usuario is not null)
                 return usuario;
 
-            // 3. Já existe conta com esse e-mail (cadastro por senha) → vincula o Google a ela
+            // 2. Já existe conta com esse e-mail (cadastro por senha) → vincula o Google a ela
             usuario = await _db.Usuarios.FirstOrDefaultAsync(u => u.Email == email);
             if (usuario is not null)
             {
-                usuario.GoogleId = google.GoogleId;
+                usuario.GoogleId = googleId;
                 usuario.EmailConfirmado = true;
                 await _db.SaveChangesAsync();
                 return usuario;
             }
 
-            // 4. Primeira vez: cria a conta, sem senha
+            // 3. Primeira vez: cria a conta, sem senha
             usuario = new Usuario
             {
                 Id = Guid.NewGuid(),
-                Nome = google.Nome.Trim(),
+                Nome = nome.Trim(),
                 Email = email,
-                GoogleId = google.GoogleId,
+                GoogleId = googleId,
+                SenhaHash = null,   // conta só do Google: sem senha
                 Papel = PapelUsuario.Cliente,
                 EmailConfirmado = true,
                 CriadoEm = DateTime.UtcNow

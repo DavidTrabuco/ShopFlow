@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
@@ -24,11 +25,10 @@ builder.Services.AddOptions<JwtOptions>()
     .ValidateDataAnnotations()
     .ValidateOnStart();
 
-// Sem ValidateOnStart de propósito: a API sobe mesmo sem Google configurado;
-// o erro aparece só quando alguém tenta logar com o Google.
-builder.Services.AddOptions<GoogleOptions>()
-    .Bind(builder.Configuration.GetSection(GoogleOptions.Secao))
-    .ValidateDataAnnotations();
+builder.Services.AddOptions<GoogleAuthOptions>()
+    .Bind(builder.Configuration.GetSection(GoogleAuthOptions.Secao))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
 
 builder.Services.AddDbContext<ShopFlowDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("ShopFlow"))
@@ -50,7 +50,6 @@ Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<ITokenService, JwtTokenService>();
 builder.Services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
-builder.Services.AddScoped<IGoogleTokenValidator, GoogleTokenValidator>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICategoriaRepository, CategoriaRepository>();
 builder.Services.AddScoped<ICategoriaService, CategoriaService>();
@@ -62,6 +61,8 @@ builder.Services.AddScoped<IVarianteService, VarianteService>();
 
 
 var jwt = builder.Configuration.GetSection(JwtOptions.Secao).Get<JwtOptions>()!;
+
+var google = builder.Configuration.GetSection(GoogleAuthOptions.Secao).Get<GoogleAuthOptions>()!;
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -87,6 +88,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 return Task.CompletedTask;
             }
         };
+    })
+    // Cookie temporário que carrega os dados do Google entre o redirect e o callback
+    .AddCookie(EsquemasAuth.Externo, options => options.ExpireTimeSpan = TimeSpan.FromMinutes(5))
+    .AddGoogle(options =>
+    {
+        options.ClientId = google.ClientId;
+        options.ClientSecret = google.ClientSecret;
+        options.SignInScheme = EsquemasAuth.Externo;
+        // Para onde o Google devolve o usuário. O middleware trata sozinho (não é um endpoint do controller)
+        // e precisa ser DIFERENTE da rota do controller, senão dá "oauth state was missing or invalid".
+        options.CallbackPath = "/api/v1/auth/google/signin-callback";
+        // O Google informa se o e-mail foi verificado; o AuthService exige isso
+        options.ClaimActions.MapJsonKey("email_verified", "email_verified");
     });
 
 
@@ -128,9 +142,6 @@ app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
-// Serve wwwroot/google-teste.html (página de teste do login com Google, sem segredos).
-// Quando não precisar mais, apague esta linha e a pasta wwwroot.
-app.UseStaticFiles();
 
 app.UseAuthentication();
 

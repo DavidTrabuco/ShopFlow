@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -6,6 +8,7 @@ using ShopFlow.API.Extensao;
 using ShopFlow.Application.DTO.Request;
 using ShopFlow.Application.DTO.Response;
 using ShopFlow.Domain.Entidades;
+using ShopFlow.Domain.Exceptions;
 using ShopFlow.Domain.Interfaces;
 using ShopFlow.Domain.Options;
 
@@ -22,28 +25,17 @@ namespace ShopFlow.API.Controllers
         private readonly IAuthService _authService;
         private readonly ITokenService _tokenService;
         private readonly JwtOptions _jwt;
-        private readonly IConfiguration _config;
 
-        public AuthController(IAuthService authService, ITokenService tokenService, IOptions<JwtOptions> jwt, IConfiguration config)
+        public AuthController(IAuthService authService, ITokenService tokenService, IOptions<JwtOptions> jwt)
         {
             _authService = authService;
             _tokenService = tokenService;
             _jwt = jwt.Value;
-            _config = config;
-        }
-
-        // O Client ID não é segredo: o front precisa dele para mostrar o botão do Google.
-        // Lê direto da configuração para não falhar quando ele ainda não foi definido.
-        [HttpGet("google/config")]
-        public IActionResult ConfigGoogle()
-        {
-            return Ok(new { clientId = _config[$"{GoogleOptions.Secao}:ClientId"] ?? string.Empty });
         }
 
         [HttpPost("registrar")]
         public async Task<IActionResult> Registrar(RegistrarRequest request)
         {
-            // E-mail em uso → ConflitoException → 409 (tratado no GlobalExceptionHandler)
             var usuario = await _authService.RegistrarAsync(request.Nome, request.Email, request.Senha);
             await AbrirSessaoAsync(usuario);
             return Ok(AuthResponse.De(usuario));
@@ -52,18 +44,47 @@ namespace ShopFlow.API.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequest request)
         {
-            // Credenciais inválidas → NaoAutorizadoException → 401 (tratado no GlobalExceptionHandler)
+            
             var usuario = await _authService.LoginAsync(request.Email, request.Senha);
             await AbrirSessaoAsync(usuario);
             return Ok(AuthResponse.De(usuario));
         }
 
-        [HttpPost("google")]
-        public async Task<IActionResult> LoginComGoogle(GoogleLoginRequest request)
+        // IDA: manda o navegador para a tela de login do Google
+        [HttpGet("google")]
+        public IActionResult LoginGoogle()
         {
-            // Token inválido → NaoAutorizadoException → 401 (tratado no GlobalExceptionHandler)
-            var usuario = await _authService.LoginComGoogleAsync(request.IdToken);
-            await AbrirSessaoAsync(usuario);
+            // O Challenge redireciona para o Google; RedirectUri é para onde voltar DEPOIS do middleware
+            return Challenge(
+                new AuthenticationProperties { RedirectUri = Url.Action(nameof(GoogleCallback)) },
+                GoogleDefaults.AuthenticationScheme);
+        }
+
+        // VOLTA: o Google devolveu o usuário; o middleware já trocou o code e gravou o cookie "External".
+        // Só é alcançado por redirecionamento, nunca chamado à mão: por isso fica fora do Swagger.
+        [ApiExplorerSettings(IgnoreApi = true)]
+        [HttpGet("google/callback")]
+        public async Task<IActionResult> GoogleCallback()
+        {
+            var resultado = await HttpContext.AuthenticateAsync(EsquemasAuth.Externo);
+            if (!resultado.Succeeded || resultado.Principal is null)
+                throw new NaoAutorizadoException("Não foi possível entrar com o Google. Tente novamente.");
+
+            var googleId = resultado.Principal.FindFirstValue(ClaimTypes.NameIdentifier);
+            var email = resultado.Principal.FindFirstValue(ClaimTypes.Email);
+            var nome = resultado.Principal.FindFirstValue(ClaimTypes.Name) ?? email;
+            var emailVerificado = string.Equals(
+                resultado.Principal.FindFirstValue("email_verified"), "true", StringComparison.OrdinalIgnoreCase);
+
+            // O cookie "External" era só um carrinho de mão: descarta
+            await HttpContext.SignOutAsync(EsquemasAuth.Externo);
+
+            if (googleId is null || email is null || nome is null)
+                throw new NaoAutorizadoException("O Google não devolveu os dados da conta.");
+
+            
+            var usuario = await _authService.ObterOuCriarViaGoogleAsync(googleId, email, nome, emailVerificado);
+            await AbrirSessaoAsync(usuario);   // o mesmo método do login normal
             return Ok(AuthResponse.De(usuario));
         }
 
