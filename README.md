@@ -96,6 +96,28 @@ Navegador                Sua API                          Google
 
 Em "Origens JavaScript autorizadas" não precisa cadastrar nada, porque não há botão do Google numa página.
 
+## Rodando a API pelo Docker
+
+O `user-secrets` **não entra no container**. Os valores vão no arquivo `.env` (na raiz, fora do git), que o `docker-compose.yml` repassa como variáveis de ambiente:
+
+```
+JWT_KEY=uma-chave-aleatoria-com-pelo-menos-32-caracteres
+GOOGLE_CLIENT_ID=SEU_ID.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=GOCSPX-sua-chave-secreta
+```
+
+```bash
+docker compose up --build
+```
+
+A API sobe em `http://localhost:8080`. Para o login com Google funcionar nesse modo, cadastre também no Google Cloud (**URIs de redirecionamento autorizados**):
+
+```
+http://localhost:8080/api/v1/auth/google/signin-callback
+```
+
+Atenção: o cookie de autenticação é `Secure`, então fora do `https` o login por Google conclui, mas o navegador pode descartar o cookie. Para testar o fluxo completo, prefira o perfil `https` do `dotnet run`.
+
 ## Deploy (Render)
 
 Variáveis de ambiente do serviço (**Environment**). Use dois underscores no lugar dos `:`:

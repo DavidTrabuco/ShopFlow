@@ -9,6 +9,8 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__ShopFlow=Host=postgres;Port=5432;Database=shopflow;Username=shopflow;Password=shopflow
       - Jwt__Key=${JWT_KEY}
+      - Google__ClientId=${GOOGLE_CLIENT_ID}
+      - Google__ClientSecret=${GOOGLE_CLIENT_SECRET}
     ports:
       - "8080:8080"
     depends_on:
