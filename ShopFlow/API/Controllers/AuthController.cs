@@ -22,21 +22,22 @@ namespace ShopFlow.API.Controllers
         private readonly IAuthService _authService;
         private readonly ITokenService _tokenService;
         private readonly JwtOptions _jwt;
-        private readonly GoogleOptions _google;
+        private readonly IConfiguration _config;
 
-        public AuthController(IAuthService authService, ITokenService tokenService, IOptions<JwtOptions> jwt, IOptions<GoogleOptions> google)
+        public AuthController(IAuthService authService, ITokenService tokenService, IOptions<JwtOptions> jwt, IConfiguration config)
         {
             _authService = authService;
             _tokenService = tokenService;
             _jwt = jwt.Value;
-            _google = google.Value;
+            _config = config;
         }
 
-        // O Client ID não é segredo: o front precisa dele para mostrar o botão do Google
+        // O Client ID não é segredo: o front precisa dele para mostrar o botão do Google.
+        // Lê direto da configuração para não falhar quando ele ainda não foi definido.
         [HttpGet("google/config")]
         public IActionResult ConfigGoogle()
         {
-            return Ok(new { clientId = _google.ClientId });
+            return Ok(new { clientId = _config[$"{GoogleOptions.Secao}:ClientId"] ?? string.Empty });
         }
 
         [HttpPost("registrar")]

@@ -53,8 +53,15 @@
 
     // O Client ID vem da própria API (variável Google__ClientId), então não precisa colar aqui
     window.onload = async () => {
-      const r = await fetch("/api/v1/auth/google/config");
-      const { clientId } = await r.json();
+      let clientId = "";
+      try {
+        const r = await fetch("/api/v1/auth/google/config");
+        if (r.ok) clientId = (await r.json()).clientId;
+        else saida.textContent = `Erro ${r.status} ao buscar o Client ID na API.`;
+      } catch (e) {
+        saida.textContent = "Não consegui falar com a API: " + e;
+        return;
+      }
 
       if (!clientId) {
         saida.textContent = "A API está sem Google__ClientId configurado (variável de ambiente no Render).";

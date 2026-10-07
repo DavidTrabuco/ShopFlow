@@ -8,11 +8,13 @@ namespace ShopFlow.Infrastructure.Security
 {
     public class GoogleTokenValidator : IGoogleTokenValidator
     {
-        private readonly GoogleOptions _google;
+        private readonly IOptions<GoogleOptions> _google;
 
+        // Não lê .Value aqui: sem Google__ClientId isso lançaria erro e derrubaria
+        // login, registro e logout. Só falha quando alguém tenta logar com o Google.
         public GoogleTokenValidator(IOptions<GoogleOptions> google)
         {
-            _google = google.Value;
+            _google = google;
         }
 
         public async Task<GoogleUsuarioInfo> ValidarAsync(string idToken)
@@ -22,7 +24,7 @@ namespace ShopFlow.Infrastructure.Security
                 // Audience = o nosso ClientId: recusa tokens emitidos para outro app
                 var payload = await GoogleJsonWebSignature.ValidateAsync(idToken, new GoogleJsonWebSignature.ValidationSettings
                 {
-                    Audience = new[] { _google.ClientId }
+                    Audience = new[] { _google.Value.ClientId }
                 });
 
                 return new GoogleUsuarioInfo(
