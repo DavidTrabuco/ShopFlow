@@ -6,7 +6,7 @@ using ShopFlow.Infrastructure.Data;
 
 namespace ShopFlow.Application.Service
 {
-    // Todo método segue o mesmo roteiro: 1. BUSCAR -> 2. CHECAR (regras) -> 3. MONTAR -> 4. SALVAR
+
     public class VarianteService : IVarianteService
     {
         private readonly IVarianteRepository _varianteRepository;
