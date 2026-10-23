@@ -351,7 +351,7 @@ namespace ShopFlow.Tests.Application.Services
         [Fact]
         public async Task Desativar_DeveManterALinhaNoBanco()
         {
-            // ARRANGE: duas variantes, para a regra da última ativa não atrapalhar
+            
             using var db = CriarDbContext();
             var categoria = new Categoria { Id = Guid.NewGuid(), Nome = "Camisas", Slug = "camisas" };
             var produto = new Produto { Id = Guid.NewGuid(), Nome = "CamisaBatman", Slug = "camisa", CategoriaId = categoria.Id, Ativo = true };
