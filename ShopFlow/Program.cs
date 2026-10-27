@@ -10,6 +10,7 @@ using ShopFlow.Domain.Interfaces;
 using ShopFlow.Domain.Interfaces.Categorias;
 using ShopFlow.Domain.Interfaces.Produtos;
 using ShopFlow.Domain.Interfaces.Variantes;
+using ShopFlow.Domain.Interfaces.Carrinho;
 using ShopFlow.Domain.Options;
 using ShopFlow.Infrastructure.Data;
 using ShopFlow.Infrastructure.Repositories;
@@ -17,6 +18,7 @@ using ShopFlow.Infrastructure.Security;
 using ShopFlow.Middlewares;
 using System.Text;
 using System.Text.Json.Serialization;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,6 +59,7 @@ builder.Services.AddScoped<IProdutoRepository, ProdutoRepository>();
 builder.Services.AddScoped<IProdutoService, ProdutoService>();
 builder.Services.AddScoped<IVarianteRepository, VarianteRepository>();
 builder.Services.AddScoped<IVarianteService, VarianteService>();
+builder.Services.AddScoped<ICarrinhoService, CarrinhoService>();
 
 
 
